@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Con Hambre</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  </head>
+  <body>
+    <div>
+      <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <img src="./images/logo.png" style="width: 80px;">
+          <a class="navbar-brand" href="//localhost/conhambre/">Con Hambre</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Regiones
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="./vallesCentrales.html">Valles Centrales</a></li>
+                  <li><a class="dropdown-item" href="./papaloapan.html">Papaloapan</a></li>
+                  <li><a class="dropdown-item" href="./sierraNorte.html">Sierra Norte</a></li>
+                  <li><a class="dropdown-item" href="./sierraSur.html">Sierra Sur</a></li>
+                  <li><a class="dropdown-item" href="./mixteca.html">Mixteca</a></li>
+                  <li><a class="dropdown-item" href="./cañada.html">Cañada</a></li>
+                  <li><a class="dropdown-item" href="./costa.html">Costa</a></li>
+                  <li><a class="dropdown-item" href="./istmo.html">Istmo</a></li>
+                </ul>
+              </li>
+            </ul>
+            <div class="d-flex" role="search">
+              <input class="form-control me-2" type="search" placeholder="Platillo..." id="buscar1">
+              <button class="btn btn-outline-success" onclick="buscarPlatillo()">Buscar</button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <!-- Inicio platillos -->
+    <div id="catalogo">
+      <div class="container">
+        <div><h2 id="title">VALLES CENTRALES</h2></div>
+        <div id="items" class="col-sm-25 row"></div>
+        <div id="map"></div>
+        <div id="platillos"></main>
+      </div>
+    </div>
+    <!-- Fin platillos -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+  </body>
+</html>
+<script>
+  var DOMplatillos = document.querySelector('#platillos');
+  var DOMitems = document.querySelector('#items');
+  let base = [];
+  let restaurantes = [];
+  //Recibir la base de datos
+  function consultar(){
+    const peticion = new XMLHttpRequest();
+    
+    peticion.addEventListener("load", () => {
+        respuesta = peticion.response;
+        base = JSON.parse(respuesta);
+        //console.log(base);
+        filterValles();
+    });
+    peticion.open("GET", "http://localhost/conhambre/recetas.php");
+    peticion.send();
+  };
+
+  function consultarRes() {
+    const resta = new XMLHttpRequest();
+
+    resta.addEventListener("load", () => {
+        respuesta2 = resta.response;
+        restaurantes = JSON.parse(respuesta2);
+        //console.log(restaurantes);
+    });
+    resta.open("GET", "http://localhost/conhambre/restaurante.php");
+    resta.send();
+  }
+
+  function filterValles() {
+    let dos = base.filter(platillos => platillos.RegionID == 8)
+    renderizarPlatillos(dos);
+  }
+  
+  function renderizarPlatillos(base) {
+    DOMplatillos.textContent = '';
+    DOMitems.textContent = '';
+      base.forEach((info) => {
+        // Estructura
+        const miNodo = document.createElement('div');
+        miNodo.classList.add('card','col-5');
+        const miNodoCardBody = document.createElement('div');
+        miNodoCardBody.classList.add('card-body');
+        //Nombre
+        const miNodoTitle = document.createElement('h3');
+        miNodoTitle.classList.add('card-title');
+        miNodoTitle.textContent = info.Nombre;
+        // Imagen
+        const miNodoImagen = document.createElement('img');
+        miNodoImagen.classList.add('img-fluid');
+        miNodoImagen.setAttribute('src', info.Imagen);
+        //Ver más
+        const miNodoBotonDes = document.createElement('button');
+        miNodoBotonDes.classList.add('btn', 'btn-primary');
+        miNodoBotonDes.textContent = 'Ver más';
+        miNodoBotonDes.setAttribute('descripcion', info.PlatilloID);
+        miNodoBotonDes.addEventListener('click', descripcionPlatillo);
+        // Insertamos
+        miNodoCardBody.appendChild(miNodoImagen);
+        miNodoCardBody.appendChild(miNodoTitle);
+        miNodoCardBody.appendChild(miNodoBotonDes);
+        miNodo.appendChild(miNodoCardBody);
+        DOMitems.appendChild(miNodo);
+    });
+  }
+  //Identificar el producto seleccionado para ver más
+  function descripcionPlatillo(evento) {
+    des = evento.target.getAttribute('descripcion');
+    base.forEach((info) => {
+      if(info.PlatilloID == des){
+        des = info;
+        renderizarDetalles(info);
+      }
+    });
+  }
+
+  function renderizarDetalles(info) {
+    DOMitems.textContent = '';
+    DOMplatillos.textContent = '';
+      // Estructura
+      const miNodo = document.createElement('div');
+      miNodo.classList.add('card', 'mb-3');
+      // Body
+      const miNodoCardBody = document.createElement('div');
+      miNodoCardBody.classList.add('card-body');
+      // Nombre
+      const miNodoTitle = document.createElement('h3');
+      miNodoTitle.classList.add('card-title');
+      miNodoTitle.textContent = des.Nombre;
+      // Imagen
+      const miNodoImagen = document.createElement('img');
+      miNodoImagen.classList.add('img-fluid');
+      miNodoImagen.setAttribute('src', des.Imagen);
+      // Ingredientes
+      const miNodoIngredientes = document.createElement('ul');
+      miNodoIngredientes.textContent = 'Ingredientes:';
+      const ingredientesArray = des.Ingredientes.split("'");
+      ingredientesArray.forEach((ingrediente) => {
+        const miNodoIngrediente = document.createElement('li');
+        miNodoIngrediente.textContent = ingrediente;
+        miNodoIngredientes.appendChild(miNodoIngrediente);
+      });
+      // Procedimiento
+      const miNodoProcedimiento = document.createElement('ul');
+      miNodoProcedimiento.textContent = 'Procedimiento:';
+      const procedimientoArray = des.Procedimiento.split("'");
+      procedimientoArray.forEach((procedimiento) => {
+        const miNodoProcedimientos = document.createElement('li');
+        miNodoProcedimientos.textContent = procedimiento;
+        miNodoProcedimiento.appendChild(miNodoProcedimientos);
+      });
+      //Restaurante
+      const miNodoBotonRes = document.createElement('button');
+      miNodoBotonRes.classList.add('btn', 'btn-primary');
+      miNodoBotonRes.textContent = 'Donde encontrarlo';
+      miNodoBotonRes.setAttribute('restaurante', info.RestauranteID);
+      miNodoBotonRes.addEventListener('click', descripcionRestaurante);
+      // Insertamos
+      miNodoCardBody.appendChild(miNodoImagen);
+      miNodoCardBody.appendChild(miNodoTitle);
+      miNodoCardBody.appendChild(miNodoIngredientes);
+      miNodoCardBody.appendChild(miNodoProcedimiento);
+      miNodoCardBody.appendChild(miNodoBotonRes);
+      miNodo.appendChild(miNodoCardBody);
+      DOMplatillos.appendChild(miNodo);
+  }
+  
+  function descripcionRestaurante(evento) {
+    des = evento.target.getAttribute('restaurante');
+    restaurantes.forEach((info) => {
+      if(info.RestauranteID == des){
+        des = info;
+        renderizarRestaurante(info);
+      }
+    });
+  }
+  
+  function renderizarRestaurante(info) {
+    DOMitems.textContent = '';
+    DOMplatillos.textContent = '';
+      // Estructura
+      const miNodo = document.createElement('div');
+      miNodo.classList.add('card', 'mb-3');
+      // Body
+      const miNodoCardBody = document.createElement('div');
+      miNodoCardBody.classList.add('card-body');
+      // Nombre
+      const miNodoTitle = document.createElement('h2');
+      miNodoTitle.classList.add('card-title');
+      miNodoTitle.textContent = des.Nombre;
+      // Direccion
+      const miNodoDireccion = document.createElement('h5');
+      miNodoDireccion.classList.add('card-text');
+      miNodoDireccion.textContent = "Dirección: "+ des.Direccion;
+      // Telefono
+      const miNodoTelefono = document.createElement('h5');
+      miNodoTelefono.classList.add('card-text');
+      miNodoTelefono.textContent = "Telefono: "+ des.Telefono;
+      // Sitio Web
+      const miNodoWeb = document.createElement('a');
+      miNodoWeb.classList.add('card-text');
+      miNodoWeb.href = des.SitioWeb; // Asigna la URL a la propiedad 'href' del enlace
+      miNodoWeb.textContent = "Sitio de contacto";
+
+      // Crea el código HTML para incrustar el mapa
+      const iframeHtml = '<iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=' + des.Longitud + '%2C' + des.Latitud + '%2C' + (parseFloat(des.Longitud) + 0.001) + '%2C' + (parseFloat(des.Latitud) + 0.001) + '&amp;layer=mapnik"></iframe>';
+      // Agrega el código HTML al div del mapa
+      document.getElementById("map").innerHTML = iframeHtml;
+      miNodoCardBody.appendChild(miNodoTitle);
+      miNodoCardBody.appendChild(miNodoDireccion);
+      miNodoCardBody.appendChild(miNodoTelefono);
+      miNodoCardBody.appendChild(miNodoWeb);
+      miNodo.appendChild(miNodoCardBody);
+      DOMplatillos.appendChild(miNodo);
+  }
+  
+  //Buscar el producto en la base de datos
+  function buscarPlatillo() {
+    var titulo = document.querySelector('#title');
+    titulo.textContent = '';
+    var filtrar = document.getElementById('buscar1').value;
+    document.getElementById('buscar1').value = "";
+    let search = base.filter(platillo => platillo.Nombre.toLowerCase() === filtrar.toLowerCase());
+    renderizarPlatillos(search);
+  }
+
+  consultar();
+  consultarRes();
+</script>
+<style>
+  .img-fluid {
+  max-width: 100%;
+  height: 500px;
+  object-fit: cover;
+  }
+</style>
